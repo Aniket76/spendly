@@ -27,6 +27,11 @@ def terms_and_conditions():
     return render_template("terms_and_conditions.html")
 
 
+@app.route("/privacy-policy")
+def privacy_policy():
+    return render_template("privacy_policy.html")
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
