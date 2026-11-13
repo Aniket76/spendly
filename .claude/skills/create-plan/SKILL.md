@@ -25,17 +25,13 @@ From $ARGUMENTS extract:
    - Example: "02-registration.md" → "Registration"
    - Example: "03-login-logout.md" with heading "# Spec: Login and Logout" → "Login and Logout"
 
-If you cannot infer these from $ARGUMENTS, ask the user
-to clarify before proceeding.
+If you cannot infer these from $ARGUMENTS, ask the user to clarify before proceeding.
 
 ## Step 2 — Pre-flight checks
 - Confirm `.claude/specs/<file_name>` exists. If not, stop and tell the user.
-- If `.claude/plans/<file_name>` already exists, stop and ask the user whether to
-  overwrite it. Never overwrite silently.
+- If `.claude/plans/<file_name>` already exists, stop and ask the user whether to overwrite it. Never overwrite silently.
 - Run `git branch --show-current`. The spec was created on `feature/<slug>`
-  (<slug> is the file name without the step number and extension). The branch
-  may carry a numeric suffix such as `feature/registration-01`, so match the slug
-  as a prefix. If the current branch does not match, warn the user (do not switch branches).
+  (<slug> is the file name without the step number and extension). The branch may carry a numeric suffix such as `feature/registration-01`, so match the slug as a prefix. If the current branch does not match, warn the user (do not switch branches).
 
 ## Step 3 — Research the codebase
 Read the spec file yourself, in full, because the plan must follow it closely.
