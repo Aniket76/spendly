@@ -52,6 +52,42 @@ def init_db(db_path=None):
         conn.close()
 
 
+def get_user_by_email(email, db_path=None):
+    """Return the user row for an email (case-insensitive), or None."""
+    conn = get_db(db_path)
+    try:
+        return conn.execute(
+            "SELECT * FROM users WHERE email = ?",
+            (email.strip().lower(),),
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def create_user(name, email, password, db_path=None):
+    """Insert a user with a hashed password and return the new user id.
+
+    Raises sqlite3.IntegrityError if the email is already registered.
+    """
+    conn = get_db(db_path)
+    try:
+        cursor = conn.execute(
+            "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
+            (
+                name.strip(),
+                email.strip().lower(),
+                generate_password_hash(password, method="pbkdf2:sha256"),
+            ),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
 def seed_db(db_path=None):
     """Insert a demo user and sample expenses once; no-op if users exist."""
     conn = get_db(db_path)

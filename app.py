@@ -1,6 +1,14 @@
-from flask import Flask, render_template
+import sqlite3
 
-from database.db import get_db, init_db, seed_db
+from flask import Flask, redirect, render_template, request, url_for
+
+from database.db import (
+    create_user,
+    get_db,
+    get_user_by_email,
+    init_db,
+    seed_db,
+)
 
 app = Flask(__name__)
 
@@ -18,9 +26,44 @@ def landing():
     return render_template("landing.html")
 
 
-@app.route("/register")
+DUPLICATE_EMAIL_ERROR = "An account with that email already exists."
+
+
+def _validate_registration(name, email, password):
+    """Return an error message for invalid registration input, else None."""
+    if not name or not email or not password:
+        return "All fields are required."
+    local, _, domain = email.partition("@")
+    if not local or "." not in domain or domain.startswith(".") or domain.endswith("."):
+        return "Please enter a valid email address."
+    if len(password) < 8:
+        return "Password must be at least 8 characters."
+    return None
+
+
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    return render_template("register.html")
+    if request.method == "GET":
+        return render_template("register.html")
+
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+
+    error = _validate_registration(name, email, password)
+    if error is None and get_user_by_email(email) is not None:
+        error = DUPLICATE_EMAIL_ERROR
+    if error is None:
+        try:
+            create_user(name, email, password)
+        except sqlite3.IntegrityError:
+            error = DUPLICATE_EMAIL_ERROR
+    if error is not None:
+        return (
+            render_template("register.html", error=error, name=name, email=email),
+            400,
+        )
+    return redirect(url_for("login"))
 
 
 @app.route("/login")
