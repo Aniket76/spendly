@@ -295,8 +295,10 @@ def test_every_profile_row_has_edit_link(client):
     assert 'scope="col"><span class="sr-only">Actions</span>' in page
 
 
-def test_delete_stub_unchanged(client):
-    assert b"coming in Step 9" in client.get("/expenses/1/delete").data
+def test_edit_page_links_to_delete(client):
+    _login(client)
+    html = client.get("/expenses/1/edit").get_data(as_text=True)
+    assert 'href="/expenses/1/delete"' in html
 
 
 # ------------------------------------------------------------- db helpers --

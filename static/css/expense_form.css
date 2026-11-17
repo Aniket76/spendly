@@ -73,6 +73,68 @@
     outline-offset: 2px;
 }
 
+.btn-danger {
+    display: inline-block;
+    padding: 0.65rem 1.5rem;
+    background: var(--danger);
+    color: var(--paper-card);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.btn-danger:hover { background: var(--ink); border-color: var(--ink); }
+
+.btn-danger:focus-visible,
+.expense-delete-trigger:focus-visible {
+    outline: 2px solid var(--danger);
+    outline-offset: 2px;
+}
+
+.expense-summary { margin-bottom: 1.25rem; }
+
+.expense-summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.expense-summary dt {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+}
+
+.expense-summary dd {
+    margin: 0;
+    text-align: right;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+}
+
+.expense-warning {
+    margin-bottom: 1.25rem;
+    color: var(--danger);
+    font-weight: 500;
+}
+
+.expense-delete-trigger {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    margin-top: 1rem;
+    color: var(--danger);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: underline;
+}
+
 .expense-actions {
     display: flex;
     flex-wrap: wrap;
@@ -95,4 +157,5 @@
     .expense-actions { flex-direction: column-reverse; }
     .expense-save,
     .expense-cancel { width: 100%; }
+    .expense-delete-trigger { width: 100%; justify-content: center; }
 }

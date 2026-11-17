@@ -100,7 +100,7 @@ pytest -s
 | `GET /profile` | Implemented — renders `profile.html` (logged-in only); optional `?date_from=` / `?date_to=` (YYYY-MM-DD) date filter |
 | `GET/POST /expenses/add` | Implemented — renders `add_expense.html` (logged-in only); validates and inserts an expense, then redirects to `/profile` (default Last 7 days). Reached from the floating "+" button on the profile page |
 | `GET/POST /expenses/<id>/edit` | Implemented — renders `edit_expense.html` (logged-in, owner only; 404 otherwise); validates and updates an expense, then redirects to `/profile` (default Last 7 days). Reached from the Edit link on each profile table row |
-| `GET /expenses/<id>/delete` | Stub — Step 9 |
+| `GET/POST /expenses/<id>/delete` | Implemented — renders `delete_expense.html` (logged-in, owner only; 404 otherwise); GET shows a confirmation page and never deletes, POST deletes then redirects to `/profile` (default Last 7 days). Reached from the Delete link on each profile table row and from the edit page |
 
 **Do not implement a stub route unless the active task explicitly targets that step.**
 

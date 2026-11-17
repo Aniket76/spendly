@@ -270,6 +270,27 @@ def update_expense(
         conn.close()
 
 
+def delete_expense_by_id(expense_id, user_id, db_path=None):
+    """Delete one of a user's expenses; return True if a row was removed.
+
+    The row is matched on both id and user_id, so another user's expense is
+    never touched (returns False). A missing id also returns False.
+    """
+    conn = get_db(db_path)
+    try:
+        cursor = conn.execute(
+            "DELETE FROM expenses WHERE id = ? AND user_id = ?",
+            (expense_id, user_id),
+        )
+        conn.commit()
+        return cursor.rowcount == 1
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
 def seed_db(db_path=None):
     """Insert a demo user and sample expenses once; no-op if users exist."""
     conn = get_db(db_path)
