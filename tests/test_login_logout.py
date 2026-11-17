@@ -38,6 +38,7 @@ def _demo_id():
 
 # ------------------------------------------------------------------ login page
 
+
 def test_login_page_renders(client):
     response = client.get("/login")
     assert response.status_code == 200
@@ -52,6 +53,7 @@ def test_login_template_has_no_hardcoded_action():
 
 
 # ------------------------------------------------------------------ success
+
 
 def test_valid_login_redirects_and_sets_session(client):
     response = _login(client)
@@ -83,6 +85,7 @@ def test_session_holds_only_user_id(client):
 
 
 # ------------------------------------------------------------------ failures
+
 
 def test_wrong_password_shows_error_no_session(client):
     response = _login(client, password="wrong-password")
@@ -117,6 +120,7 @@ def test_email_repopulated_password_not(client):
 
 # ------------------------------------------------------------------ navbar
 
+
 def test_navbar_logged_in_vs_out(client):
     out = client.get("/").data
     assert b"Sign in" in out and b"Get started" in out
@@ -129,6 +133,7 @@ def test_navbar_logged_in_vs_out(client):
 
 
 # ------------------------------------------------------------------ redirects
+
 
 def test_login_page_redirects_when_logged_in(client):
     _login(client)
@@ -154,5 +159,8 @@ def test_logout_when_logged_out_ok(client):
 
 def test_stub_routes_unchanged(client):
     # /expenses/add is implemented in Step 6; see tests/test_add_expense.py.
-    assert b"coming in Step 8" in client.get("/expenses/1/edit").data
+    # /expenses/<id>/edit is implemented in Step 7; logged out it redirects.
+    response = client.get("/expenses/1/edit")
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/login")
     assert b"coming in Step 9" in client.get("/expenses/1/delete").data

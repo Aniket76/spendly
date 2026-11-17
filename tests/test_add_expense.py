@@ -110,8 +110,15 @@ def test_get_renders_form_with_defaults(client):
     assert "Choose a category" in html
     for label in ("Amount", "Category", "Date", "Description"):
         assert label in html
-    for category in ("Food", "Transport", "Bills", "Health", "Entertainment",
-                     "Shopping", "Other"):
+    for category in (
+        "Food",
+        "Transport",
+        "Bills",
+        "Health",
+        "Entertainment",
+        "Shopping",
+        "Other",
+    ):
         assert f'<option value="{category}"' in html
 
 
@@ -160,7 +167,10 @@ def test_redirect_opens_on_last_7_days_with_new_expense_listed(client):
     assert "Fresh lunch" in page
     chip = re.search(r'<a class="filter-preset"[^>]*>Last 7 days</a>', page)
     assert chip and 'aria-current="true"' in chip.group(0)
-    assert f'name="date_from" value="{(date.today() - timedelta(days=6)).isoformat()}"' in page
+    assert (
+        f'name="date_from" value="{(date.today() - timedelta(days=6)).isoformat()}"'
+        in page
+    )
 
 
 def test_expense_older_than_7_days_is_saved_but_not_in_default_view(client):
@@ -355,7 +365,10 @@ def test_create_expense_treats_sql_text_as_data(db_path):
 
 
 def test_other_stubs_unchanged(client):
-    assert b"coming in Step 8" in client.get("/expenses/1/edit").data
+    # Edit is implemented in Step 7; logged out it redirects to login.
+    response = client.get("/expenses/1/edit")
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/login")
     assert b"coming in Step 9" in client.get("/expenses/1/delete").data
 
 

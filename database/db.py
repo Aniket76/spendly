@@ -165,6 +165,19 @@ def get_recent_expenses(
         conn.close()
 
 
+def get_expense_by_id(expense_id, user_id, db_path=None):
+    """Return one of a user's expenses, or None if it is missing or not theirs."""
+    conn = get_db(db_path)
+    try:
+        return conn.execute(
+            "SELECT id, amount, category, date, description FROM expenses "
+            "WHERE id = ? AND user_id = ?",
+            (expense_id, user_id),
+        ).fetchone()
+    finally:
+        conn.close()
+
+
 def create_user(name, email, password, db_path=None):
     """Insert a user with a hashed password and return the new user id.
 
@@ -212,6 +225,44 @@ def create_expense(
         )
         conn.commit()
         return cursor.lastrowid
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def update_expense(
+    expense_id,
+    user_id,
+    amount,
+    category,
+    expense_date,
+    description=None,
+    db_path=None,
+):
+    """Update one of a user's expenses; return True if a row was changed.
+
+    The row is matched on both id and user_id, so another user's expense is
+    never touched (returns False). Inputs are expected to be validated already.
+    The amount is stored rounded to 2 decimals and a blank description as NULL.
+    """
+    conn = get_db(db_path)
+    try:
+        cursor = conn.execute(
+            "UPDATE expenses SET amount = ?, category = ?, date = ?, "
+            "description = ? WHERE id = ? AND user_id = ?",
+            (
+                round(float(amount), 2),
+                category,
+                expense_date,
+                (description or "").strip() or None,
+                expense_id,
+                user_id,
+            ),
+        )
+        conn.commit()
+        return cursor.rowcount == 1
     except Exception:
         conn.rollback()
         raise
