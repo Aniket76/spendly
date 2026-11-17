@@ -60,6 +60,7 @@ spendly/
 - When asked to plan, delegate codebase research 
   to a subagent before presenting the plan
 - always use a builtin plan subagent in plan mode
+- Always use the `spendly-ui-ux` skill when creating or changing any template, page, or CSS/JS in `static/` — before building (to reuse tokens and patterns) and after (to check accessibility and mobile)
 
 ---
 
