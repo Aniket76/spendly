@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from datetime import date
+from datetime import date, timedelta
 
 from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
@@ -142,6 +142,49 @@ def privacy_policy():
     return render_template("privacy_policy.html")
 
 
+DEFAULT_PRESET = "last_7"
+INVALID_RANGE_ERROR = "Enter valid dates, with the start on or before the end."
+
+
+def _parse_date(text):
+    """Return text as a date if it is strictly YYYY-MM-DD, else raise ValueError."""
+    parsed = date.fromisoformat(text)
+    if parsed.isoformat() != text:
+        raise ValueError(text)
+    return parsed
+
+
+def _parse_date_range(raw_from, raw_to):
+    """Validate the filter inputs; return (date_from, date_to, error).
+
+    Blank values mean "not set". Any invalid input or a reversed range returns
+    (None, None, error) so the caller falls back to all-time data.
+    """
+    raw_from, raw_to = (raw_from or "").strip(), (raw_to or "").strip()
+    try:
+        start = _parse_date(raw_from) if raw_from else None
+        end = _parse_date(raw_to) if raw_to else None
+    except ValueError:
+        return None, None, INVALID_RANGE_ERROR
+    if start and end and start > end:
+        return None, None, INVALID_RANGE_ERROR
+    return (
+        start.isoformat() if start else None,
+        end.isoformat() if end else None,
+        None,
+    )
+
+
+def _preset_ranges(today=None):
+    """Return the quick-filter ranges as (date_from, date_to) ISO pairs."""
+    today = today or date.today()
+    return {
+        "last_7": ((today - timedelta(days=6)).isoformat(), today.isoformat()),
+        "this_month": (today.replace(day=1).isoformat(), today.isoformat()),
+        "last_30": ((today - timedelta(days=29)).isoformat(), today.isoformat()),
+    }
+
+
 @app.route("/profile")
 def profile():
     user_id = session.get("user_id")
@@ -153,12 +196,37 @@ def profile():
         session.clear()
         return redirect(url_for("login"))
 
+    presets = _preset_ranges()
+    if any(key in request.args for key in ("date_from", "date_to", "range")):
+        date_from, date_to, filter_error = _parse_date_range(
+            request.args.get("date_from"), request.args.get("date_to")
+        )
+    else:
+        # No filter in the URL: open on the default quick range.
+        (date_from, date_to), filter_error = presets[DEFAULT_PRESET], None
+    filter_active = date_from is not None or date_to is not None
+    summary = get_expense_summary(user_id, date_from=date_from, date_to=date_to)
+    # An unfiltered count tells "no expenses at all" apart from "none in range".
+    has_expenses = (
+        get_expense_summary(user_id)["count"] > 0 if filter_active else summary["count"] > 0
+    )
+
     return render_template(
         "profile.html",
         user=user,
-        summary=get_expense_summary(user_id),
-        category_totals=get_category_totals(user_id),
-        expenses=get_recent_expenses(user_id),
+        summary=summary,
+        category_totals=get_category_totals(
+            user_id, date_from=date_from, date_to=date_to
+        ),
+        expenses=get_recent_expenses(
+            user_id, limit=None, date_from=date_from, date_to=date_to
+        ),
+        date_from=date_from,
+        date_to=date_to,
+        filter_active=filter_active,
+        filter_error=filter_error,
+        has_expenses=has_expenses,
+        presets=presets,
     )
 
 

@@ -97,7 +97,7 @@ pytest -s
 | `GET /register` | Implemented — renders `register.html` |
 | `GET /login` | Implemented — renders `login.html` |
 | `GET /logout` | Implemented — clears the session, redirects to `/` |
-| `GET /profile` | Implemented — renders `profile.html` (logged-in only) |
+| `GET /profile` | Implemented — renders `profile.html` (logged-in only); optional `?date_from=` / `?date_to=` (YYYY-MM-DD) date filter |
 | `GET /expenses/add` | Stub — Step 7 |
 | `GET /expenses/<id>/edit` | Stub — Step 8 |
 | `GET /expenses/<id>/delete` | Stub — Step 9 |

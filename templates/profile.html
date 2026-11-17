@@ -10,10 +10,38 @@
 <div class="profile-page">
 
     <section class="profile-header" aria-labelledby="profile-name">
-        <p class="profile-eyebrow">Your profile</p>
-        <h1 class="profile-name" id="profile-name">{{ user.name }}</h1>
-        <p class="profile-email">{{ user.email }}</p>
-        <p class="profile-meta">Member since {{ user.created_at | human_date }}</p>
+        <div class="profile-user">
+            <p class="profile-eyebrow">Your profile</p>
+            <h1 class="profile-name" id="profile-name">{{ user.name }}</h1>
+            <p class="profile-email">{{ user.email }}</p>
+            <p class="profile-meta">Member since {{ user.created_at | human_date }}</p>
+        </div>
+
+        <div class="profile-filter" role="group" aria-labelledby="filter-heading">
+            <h2 class="sr-only" id="filter-heading">Filter by date</h2>
+            <form class="filter-form" method="get" action="{{ url_for('profile') }}">
+                <div class="filter-field">
+                    <label for="date_from">From</label>
+                    <input class="filter-input" type="date" id="date_from" name="date_from" value="{{ date_from or '' }}">
+                </div>
+                <div class="filter-field">
+                    <label for="date_to">To</label>
+                    <input class="filter-input" type="date" id="date_to" name="date_to" value="{{ date_to or '' }}">
+                </div>
+                <button class="btn-primary filter-apply" type="submit">Apply</button>
+            </form>
+
+            <div class="filter-presets" role="group" aria-label="Quick date ranges">
+                <a class="filter-preset" href="{{ url_for('profile', date_from=presets.last_7[0], date_to=presets.last_7[1]) }}"{% if (date_from, date_to) == presets.last_7 %} aria-current="true"{% endif %}>Last 7 days</a>
+                <a class="filter-preset" href="{{ url_for('profile', date_from=presets.this_month[0], date_to=presets.this_month[1]) }}"{% if (date_from, date_to) == presets.this_month %} aria-current="true"{% endif %}>This month</a>
+                <a class="filter-preset" href="{{ url_for('profile', date_from=presets.last_30[0], date_to=presets.last_30[1]) }}"{% if (date_from, date_to) == presets.last_30 %} aria-current="true"{% endif %}>Last 30 days</a>
+                <a class="filter-preset" href="{{ url_for('profile', range='all') }}"{% if not filter_active and not filter_error %} aria-current="true"{% endif %}>All time</a>
+            </div>
+
+            {% if filter_error %}
+            <p class="filter-error" role="alert">{{ filter_error }}</p>
+            {% endif %}
+        </div>
     </section>
 
     <section class="profile-stats" aria-label="Spending summary">
@@ -36,10 +64,15 @@
         </div>
     </section>
 
-    {% if summary.count == 0 %}
+    {% if not has_expenses %}
     <section class="profile-card profile-empty" aria-labelledby="empty-heading">
         <h2 class="profile-card-title" id="empty-heading">No expenses yet</h2>
         <p class="profile-empty-text">Once you record spending, your totals, category breakdown and recent expenses will show up here.</p>
+    </section>
+    {% elif summary.count == 0 %}
+    <section class="profile-card profile-empty" aria-labelledby="no-results-heading">
+        <h2 class="profile-card-title" id="no-results-heading">No expenses in this range</h2>
+        <p class="profile-empty-text">Try a wider range, or <a class="filter-link" href="{{ url_for('profile', range='all') }}">clear the filter</a> to see all your expenses.</p>
     </section>
     {% else %}
 

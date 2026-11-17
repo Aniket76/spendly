@@ -54,7 +54,7 @@ def _add_expense(user_id, amount, category, day, description, path=None):
 
 def _page(client):
     _login(client)
-    return client.get("/profile")
+    return client.get("/profile?range=all")
 
 
 # ------------------------------------------------------------------ db helpers
@@ -250,7 +250,7 @@ def test_profile_does_not_leak_other_users_expenses(client):
 
     client.get("/logout")
     client.post("/login", data={"email": "other@example.com", "password": "password123"})
-    html = client.get("/profile").data.decode()
+    html = client.get("/profile?range=all").data.decode()
     assert "Secret flight" in html
     assert "Weekly groceries" not in html
 
@@ -273,7 +273,7 @@ def test_navbar_swaps_home_and_profile_tabs(client):
     assert b">Profile</a>" in home
     assert b">Home</a>" not in home
 
-    profile = client.get("/profile").data
+    profile = client.get("/profile?range=all").data
     assert b">Home</a>" in profile
     assert b">Profile</a>" not in profile
     assert b"Sign out" in profile
@@ -281,7 +281,7 @@ def test_navbar_swaps_home_and_profile_tabs(client):
 
 def test_navbar_home_tab_links_to_landing(client):
     _login(client)
-    html = client.get("/profile").data.decode()
+    html = client.get("/profile?range=all").data.decode()
     assert re.search(r'<a href="/" class="nav-link-keep">Home</a>', html)
 
 
@@ -296,7 +296,7 @@ def test_profile_escapes_html(client):
     uid = db.create_user("<script>alert(1)</script>", "xss@example.com", "password123")
     _add_expense(uid, 5.0, "Other", "2026-01-01", "<script>bad()</script>")
     client.post("/login", data={"email": "xss@example.com", "password": "password123"})
-    html = client.get("/profile").data.decode()
+    html = client.get("/profile?range=all").data.decode()
     assert "<script>alert(1)</script>" not in html
     assert "<script>bad()</script>" not in html
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
