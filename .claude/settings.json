@@ -22,5 +22,8 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "render-visual-skill@anthropic-plugin-directory": true
   }
 }
