@@ -1,9 +1,11 @@
 ---
+name: create-plan
 description: Create a plan file for the next Spendly step
 argument-hint: "Spec file reference e.g. @.claude/specs/02-registration.md"
 allowed-tools: Read, Write, Glob, Agent, Bash(git:*)
 model: claude-opus-5-5
 effort: high
+disable-model-invocation: true
 ---
 
 You are a senior developer spinning up a new feature plan for the
