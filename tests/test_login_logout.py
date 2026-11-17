@@ -153,6 +153,6 @@ def test_logout_when_logged_out_ok(client):
 
 
 def test_stub_routes_unchanged(client):
-    assert b"coming in Step 7" in client.get("/expenses/add").data
+    # /expenses/add is implemented in Step 6; see tests/test_add_expense.py.
     assert b"coming in Step 8" in client.get("/expenses/1/edit").data
     assert b"coming in Step 9" in client.get("/expenses/1/delete").data

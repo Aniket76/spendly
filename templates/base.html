@@ -10,7 +10,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block head %}{% endblock %}
 </head>
-<body>
+{% set show_fab = session.get("user_id") and request.endpoint in ("landing", "profile") %}
+<body{% if show_fab %} class="has-fab"{% endif %}>
 
     <nav class="navbar">
         <div class="nav-inner">
@@ -35,8 +36,23 @@
     </nav>
 
     <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-stack">
+            {% for category, message in messages %}
+            <p class="flash flash-{{ category }}" role="status">{{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
         {% block content %}{% endblock %}
     </main>
+
+    {% if show_fab %}
+    <a class="fab" href="{{ url_for('add_expense') }}" aria-label="Add expense">
+        <span class="fab-icon" aria-hidden="true">+</span>
+    </a>
+    {% endif %}
 
     <footer class="footer">
         <div class="footer-inner">

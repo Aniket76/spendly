@@ -353,8 +353,12 @@ def test_template_and_css_rules():
 
 
 def test_stubs_unchanged(client):
-    assert client.get("/expenses/add").get_data(as_text=True) == (
-        "Add expense — coming in Step 7"
+    # /expenses/add is implemented in Step 6; edit and delete are still stubs.
+    assert client.get("/expenses/1/edit").get_data(as_text=True) == (
+        "Edit expense — coming in Step 8"
+    )
+    assert client.get("/expenses/1/delete").get_data(as_text=True) == (
+        "Delete expense — coming in Step 9"
     )
 
 

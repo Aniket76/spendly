@@ -560,6 +560,23 @@ body.modal-open { overflow: hidden; }
     margin-bottom: 1.25rem;
 }
 
+/* Flash messages — rendered from base.html */
+.flash-stack {
+    max-width: 960px;
+    margin: 1.5rem auto 0;
+    padding: 0 1.5rem;
+}
+
+.flash {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
 .form-group { margin-bottom: 1.25rem; }
 
 .form-group label {
@@ -680,6 +697,55 @@ body.modal-open { overflow: hidden; }
     color: var(--paper);
     padding: 2.5rem 2rem;
     text-align: center;
+}
+
+/* Reserve room under the footer content so the fixed FAB never covers it. */
+.has-fab .footer {
+    padding-bottom: calc(2.5rem + 3.5rem + 1.5rem + env(safe-area-inset-bottom));
+}
+
+/* Floating action button (add expense) — rendered from base.html */
+.fab {
+    position: fixed;
+    right: 1.5rem;
+    bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--paper-card);
+    text-decoration: none;
+    border: 2px solid var(--paper-card);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    transition: background 0.2s;
+}
+
+.fab:hover { background: var(--ink); }
+
+.fab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+.fab-icon {
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 400;
+}
+
+@media (max-width: 480px) {
+    .fab {
+        right: 1rem;
+        bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+
+    .has-fab .footer {
+        padding-bottom: calc(2.5rem + 3.5rem + 1rem + env(safe-area-inset-bottom));
+    }
 }
 
 .footer-inner {
