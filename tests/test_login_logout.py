@@ -56,7 +56,7 @@ def test_login_template_has_no_hardcoded_action():
 def test_valid_login_redirects_and_sets_session(client):
     response = _login(client)
     assert response.status_code == 302
-    assert response.headers["Location"] == "/"
+    assert response.headers["Location"] == "/profile"
     assert _session_user_id(client) == _demo_id()
 
 
@@ -134,7 +134,7 @@ def test_login_page_redirects_when_logged_in(client):
     _login(client)
     response = client.get("/login")
     assert response.status_code == 302
-    assert response.headers["Location"] == "/"
+    assert response.headers["Location"] == "/profile"
 
 
 def test_logout_clears_session_and_redirects(client):
@@ -153,5 +153,6 @@ def test_logout_when_logged_out_ok(client):
 
 
 def test_stub_routes_unchanged(client):
-    assert b"coming in Step 4" in client.get("/profile").data
     assert b"coming in Step 7" in client.get("/expenses/add").data
+    assert b"coming in Step 8" in client.get("/expenses/1/edit").data
+    assert b"coming in Step 9" in client.get("/expenses/1/delete").data

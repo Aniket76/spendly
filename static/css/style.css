@@ -102,6 +102,22 @@ a { color: inherit; text-decoration: none; }
 
 .nav-links a { color: var(--ink-muted); transition: color 0.2s; }
 .nav-links a:hover { color: var(--ink); }
+.nav-links a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
 
 .nav-cta {
     background: var(--ink) !important;
@@ -714,7 +730,7 @@ body.modal-open { overflow: hidden; }
 }
 
 @media (max-width: 600px) {
-    .nav-links a:not(.nav-cta) { display: none; }
+    .nav-links a:not(.nav-cta):not(.nav-link-keep) { display: none; }
     .hero { padding: 3rem 1rem 2rem; }
     .hero-subtitle { font-size: 1.05rem; }
     .hero-actions { width: 100%; flex-direction: column; }
