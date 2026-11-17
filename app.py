@@ -1,13 +1,18 @@
 import os
 import sqlite3
+from datetime import date
 
 from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
 from database.db import (
     create_user,
+    get_category_totals,
     get_db,
+    get_expense_summary,
+    get_recent_expenses,
     get_user_by_email,
+    get_user_by_id,
     init_db,
     seed_db,
 )
@@ -19,6 +24,35 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-me")
 with app.app_context():
     init_db()
     seed_db()
+
+
+# ------------------------------------------------------------------ #
+# Template filters                                                    #
+# ------------------------------------------------------------------ #
+
+@app.template_filter("inr")
+def format_inr(value):
+    """Format a number as rupees with Indian digit grouping: ₹1,23,456.50."""
+    amount = round(float(value or 0), 2)
+    sign = "-" if amount < 0 else ""
+    whole, fraction = f"{abs(amount):.2f}".split(".")
+    if len(whole) > 3:
+        head, tail = whole[:-3], whole[-3:]
+        groups = []
+        while len(head) > 2:
+            groups.insert(0, head[-2:])
+            head = head[:-2]
+        if head:
+            groups.insert(0, head)
+        whole = ",".join(groups + [tail])
+    return f"{sign}₹{whole}.{fraction}"
+
+
+@app.template_filter("human_date")
+def format_human_date(value):
+    """Turn 'YYYY-MM-DD[ HH:MM:SS]' text into '17 Nov 2026'."""
+    parsed = date.fromisoformat(str(value)[:10])
+    return f"{parsed.day} {parsed:%b %Y}"
 
 
 # ------------------------------------------------------------------ #
@@ -76,7 +110,7 @@ LOGIN_ERROR = "Invalid email or password."
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if session.get("user_id"):
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
     if request.method == "GET":
         return render_template("login.html")
 
@@ -89,7 +123,7 @@ def login():
 
     session.clear()
     session["user_id"] = user["id"]
-    return redirect(url_for("landing"))
+    return redirect(url_for("profile"))
 
 
 @app.route("/logout")
@@ -108,14 +142,29 @@ def privacy_policy():
     return render_template("privacy_policy.html")
 
 
+@app.route("/profile")
+def profile():
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    return render_template(
+        "profile.html",
+        user=user,
+        summary=get_expense_summary(user_id),
+        category_totals=get_category_totals(user_id),
+        expenses=get_recent_expenses(user_id),
+    )
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/profile")
-def profile():
-    return "Profile page — coming in Step 4"
-
 
 @app.route("/expenses/add")
 def add_expense():

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+
+    <section class="profile-header" aria-labelledby="profile-name">
+        <p class="profile-eyebrow">Your profile</p>
+        <h1 class="profile-name" id="profile-name">{{ user.name }}</h1>
+        <p class="profile-email">{{ user.email }}</p>
+        <p class="profile-meta">Member since {{ user.created_at | human_date }}</p>
+    </section>
+
+    <section class="profile-stats" aria-label="Spending summary">
+        <div class="stat-tile">
+            <p class="stat-label">Total spent</p>
+            <p class="stat-value">{{ summary.total | inr }}</p>
+        </div>
+        <div class="stat-tile">
+            <p class="stat-label">Expenses</p>
+            <p class="stat-value">{{ summary.count }}</p>
+        </div>
+        <div class="stat-tile">
+            <p class="stat-label">Top category</p>
+            {% if summary.top_category %}
+            <p class="stat-value">{{ summary.top_category }}</p>
+            <p class="stat-note">{{ summary.top_category_total | inr }}</p>
+            {% else %}
+            <p class="stat-value">—</p>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if summary.count == 0 %}
+    <section class="profile-card profile-empty" aria-labelledby="empty-heading">
+        <h2 class="profile-card-title" id="empty-heading">No expenses yet</h2>
+        <p class="profile-empty-text">Once you record spending, your totals, category breakdown and recent expenses will show up here.</p>
+    </section>
+    {% else %}
+
+    <div class="profile-columns">
+        <section class="profile-card" aria-labelledby="recent-heading">
+            <h2 class="profile-card-title" id="recent-heading">Recent expenses</h2>
+            <table class="expense-table">
+                <caption class="sr-only">Your most recent expenses, newest first</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Date</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Description</th>
+                        <th scope="col" class="col-amount">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in expenses %}
+                    <tr>
+                        <td data-label="Date">{{ e.date | human_date }}</td>
+                        <td data-label="Category"><span class="category-chip">{{ e.category }}</span></td>
+                        <td data-label="Description">{{ e.description or '—' }}</td>
+                        <td data-label="Amount" class="col-amount">{{ e.amount | inr }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <section class="profile-card" aria-labelledby="category-heading">
+            <h2 class="profile-card-title" id="category-heading">Spending by category</h2>
+            <ul class="category-list">
+                {% for c in category_totals %}
+                {% set pct = (c.total / summary.total * 100) if summary.total else 0 %}
+                {% set bucket = ((pct / 5) | round(0, 'ceil') | int) * 5 %}
+                <li class="category-row">
+                    <span class="category-name">{{ c.category }}</span>
+                    <span class="category-amount">{{ c.total | inr }} <span class="category-pct">({{ pct | round(0) | int }}%)</span></span>
+                    <span class="category-bar" aria-hidden="true"><span class="category-bar-fill bar-w-{{ bucket }}"></span></span>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}

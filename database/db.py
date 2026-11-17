@@ -64,6 +64,74 @@ def get_user_by_email(email, db_path=None):
         conn.close()
 
 
+def get_user_by_id(user_id, db_path=None):
+    """Return the user row (without password_hash) for an id, or None."""
+    conn = get_db(db_path)
+    try:
+        return conn.execute(
+            "SELECT id, name, email, created_at FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def get_category_totals(user_id, db_path=None):
+    """Return (category, total) rows for a user, highest total first."""
+    conn = get_db(db_path)
+    try:
+        return conn.execute(
+            "SELECT category, SUM(amount) AS total FROM expenses "
+            "WHERE user_id = ? GROUP BY category "
+            "ORDER BY total DESC, category ASC",
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+
+def get_expense_summary(user_id, db_path=None):
+    """Return total, count and top category for a user's expenses.
+
+    Always returns a dict. With no expenses, total is 0, count is 0 and
+    top_category is None.
+    """
+    conn = get_db(db_path)
+    try:
+        total, count = conn.execute(
+            "SELECT COALESCE(SUM(amount), 0), COUNT(*) FROM expenses "
+            "WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+        top = conn.execute(
+            "SELECT category, SUM(amount) AS total FROM expenses "
+            "WHERE user_id = ? GROUP BY category "
+            "ORDER BY total DESC, category ASC LIMIT 1",
+            (user_id,),
+        ).fetchone()
+        return {
+            "total": total,
+            "count": count,
+            "top_category": top["category"] if top else None,
+            "top_category_total": top["total"] if top else 0,
+        }
+    finally:
+        conn.close()
+
+
+def get_recent_expenses(user_id, limit=10, db_path=None):
+    """Return a user's newest expenses first (date, then id, descending)."""
+    conn = get_db(db_path)
+    try:
+        return conn.execute(
+            "SELECT id, amount, category, date, description FROM expenses "
+            "WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT ?",
+            (user_id, limit),
+        ).fetchall()
+    finally:
+        conn.close()
+
+
 def create_user(name, email, password, db_path=None):
     """Insert a user with a hashed password and return the new user id.
 

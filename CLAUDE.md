@@ -60,6 +60,7 @@ spendly/
 - When asked to plan, delegate codebase research 
   to a subagent before presenting the plan
 - always use a builtin plan subagent in plan mode
+- Always use the `spendly-ui-ux` skill when creating or changing any template, page, or CSS/JS in `static/` — before building (to reuse tokens and patterns) and after (to check accessibility and mobile)
 
 ---
 
@@ -95,8 +96,8 @@ pytest -s
 | `GET /` | Implemented — renders `landing.html` |
 | `GET /register` | Implemented — renders `register.html` |
 | `GET /login` | Implemented — renders `login.html` |
-| `GET /logout` | Stub — Step 3 |
-| `GET /profile` | Stub — Step 4 |
+| `GET /logout` | Implemented — clears the session, redirects to `/` |
+| `GET /profile` | Implemented — renders `profile.html` (logged-in only) |
 | `GET /expenses/add` | Stub — Step 7 |
 | `GET /expenses/<id>/edit` | Stub — Step 8 |
 | `GET /expenses/<id>/delete` | Stub — Step 9 |
