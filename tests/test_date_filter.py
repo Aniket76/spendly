@@ -365,9 +365,9 @@ def test_stubs_unchanged(client):
     response = client.get("/expenses/1/edit")
     assert response.status_code == 302
     assert response.headers["Location"].endswith("/login")
-    assert client.get("/expenses/1/delete").get_data(as_text=True) == (
-        "Delete expense — coming in Step 9"
-    )
+    delete = client.get("/expenses/1/delete")
+    assert delete.status_code == 302
+    assert delete.headers["Location"].endswith("/login")
 
 
 def test_all_expenses_listed_beyond_ten(app_module):

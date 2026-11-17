@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Delete expense — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/expense_form.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="expense-form-page">
+    <a class="expense-form-back" href="{{ url_for('profile') }}">&larr; Back to profile</a>
+
+    <section class="expense-form-card" aria-labelledby="expense-form-title">
+        <h1 class="expense-form-title" id="expense-form-title">Delete expense?</h1>
+
+        <dl class="expense-summary">
+            <div class="expense-summary-row">
+                <dt>Date</dt>
+                <dd>{{ expense.date | human_date }}</dd>
+            </div>
+            <div class="expense-summary-row">
+                <dt>Category</dt>
+                <dd>{{ expense.category }}</dd>
+            </div>
+            <div class="expense-summary-row">
+                <dt>Description</dt>
+                <dd>{{ expense.description or '—' }}</dd>
+            </div>
+            <div class="expense-summary-row">
+                <dt>Amount</dt>
+                <dd>{{ expense.amount | inr }}</dd>
+            </div>
+        </dl>
+
+        <p class="expense-warning">This can't be undone.</p>
+
+        <form method="post" action="{{ url_for('delete_expense', id=expense.id) }}">
+            <div class="expense-actions">
+                <button class="btn-danger expense-save" type="submit">Delete expense</button>
+                <a class="btn-ghost expense-cancel" href="{{ url_for('profile') }}">Cancel</a>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

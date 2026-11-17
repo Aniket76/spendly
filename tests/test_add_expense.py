@@ -369,7 +369,9 @@ def test_other_stubs_unchanged(client):
     response = client.get("/expenses/1/edit")
     assert response.status_code == 302
     assert response.headers["Location"].endswith("/login")
-    assert b"coming in Step 9" in client.get("/expenses/1/delete").data
+    delete = client.get("/expenses/1/delete")
+    assert delete.status_code == 302
+    assert delete.headers["Location"].endswith("/login")
 
 
 def test_new_templates_and_css_follow_rules():

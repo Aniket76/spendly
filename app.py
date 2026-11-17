@@ -18,6 +18,7 @@ from werkzeug.security import check_password_hash
 from database.db import (
     create_expense,
     create_user,
+    delete_expense_by_id,
     get_category_totals,
     get_db,
     get_expense_by_id,
@@ -428,14 +429,30 @@ def edit_expense(id):
     return redirect(url_for("profile"))
 
 
-# ------------------------------------------------------------------ #
-# Placeholder routes — students will implement these                  #
-# ------------------------------------------------------------------ #
-
-
-@app.route("/expenses/<int:id>/delete")
+@app.route("/expenses/<int:id>/delete", methods=["GET", "POST"])
 def delete_expense(id):
-    return "Delete expense — coming in Step 9"
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+    if get_user_by_id(user_id) is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    # Scoped to the session user in SQL: missing and not-yours both give 404.
+    expense = get_expense_by_id(id, user_id)
+    if expense is None:
+        abort(404)
+
+    # GET only shows the confirmation page; it never changes data.
+    if request.method == "GET":
+        return render_template("delete_expense.html", expense=expense)
+
+    # The expense id comes only from the URL and the owner only from the
+    # session; any id or user_id in the form is ignored.
+    if not delete_expense_by_id(id, user_id):
+        abort(404)
+    flash("Expense deleted.", "success")
+    return redirect(url_for("profile"))
 
 
 if __name__ == "__main__":
