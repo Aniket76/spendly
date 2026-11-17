@@ -3,7 +3,16 @@ import sqlite3
 from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import (
+    Flask,
+    abort,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from werkzeug.security import check_password_hash
 
 from database.db import (
@@ -11,12 +20,14 @@ from database.db import (
     create_user,
     get_category_totals,
     get_db,
+    get_expense_by_id,
     get_expense_summary,
     get_recent_expenses,
     get_user_by_email,
     get_user_by_id,
     init_db,
     seed_db,
+    update_expense,
 )
 
 app = Flask(__name__)
@@ -31,6 +42,7 @@ with app.app_context():
 # ------------------------------------------------------------------ #
 # Template filters                                                    #
 # ------------------------------------------------------------------ #
+
 
 @app.template_filter("inr")
 def format_inr(value):
@@ -60,6 +72,7 @@ def format_human_date(value):
 # ------------------------------------------------------------------ #
 # Routes                                                              #
 # ------------------------------------------------------------------ #
+
 
 @app.route("/")
 def landing():
@@ -210,7 +223,9 @@ def profile():
     summary = get_expense_summary(user_id, date_from=date_from, date_to=date_to)
     # An unfiltered count tells "no expenses at all" apart from "none in range".
     has_expenses = (
-        get_expense_summary(user_id)["count"] > 0 if filter_active else summary["count"] > 0
+        get_expense_summary(user_id)["count"] > 0
+        if filter_active
+        else summary["count"] > 0
     )
 
     return render_template(
@@ -249,9 +264,7 @@ AMOUNT_TOO_LARGE_ERROR = "Amount cannot be more than ₹1,00,00,000."
 CATEGORY_ERROR = "Choose a category from the list."
 DATE_ERROR = "Enter a valid date."
 FUTURE_DATE_ERROR = "The date cannot be in the future."
-DESCRIPTION_ERROR = (
-    f"Description must be {MAX_DESCRIPTION_LENGTH} characters or fewer."
-)
+DESCRIPTION_ERROR = f"Description must be {MAX_DESCRIPTION_LENGTH} characters or fewer."
 
 
 def _validate_expense(raw_amount, category, raw_date, raw_description):
@@ -348,14 +361,76 @@ def add_expense():
     return redirect(url_for("profile"))
 
 
+@app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
+def edit_expense(id):
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+    if get_user_by_id(user_id) is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    # Scoped to the session user in SQL: missing and not-yours both give 404.
+    expense = get_expense_by_id(id, user_id)
+    if expense is None:
+        abort(404)
+
+    today = date.today().isoformat()
+    if request.method == "GET":
+        return render_template(
+            "edit_expense.html",
+            categories=EXPENSE_CATEGORIES,
+            today=today,
+            expense_id=id,
+            values={
+                "amount": f"{expense['amount']:.2f}",
+                "category": expense["category"],
+                "date": expense["date"],
+                "description": expense["description"] or "",
+            },
+        )
+
+    # The expense id comes only from the URL and the owner only from the
+    # session; any id or user_id in the form is ignored.
+    values = {
+        "amount": request.form.get("amount", ""),
+        "category": request.form.get("category", ""),
+        "date": request.form.get("date", ""),
+        "description": request.form.get("description", ""),
+    }
+    cleaned, error = _validate_expense(
+        values["amount"], values["category"], values["date"], values["description"]
+    )
+    if error is not None:
+        return (
+            render_template(
+                "edit_expense.html",
+                categories=EXPENSE_CATEGORIES,
+                today=today,
+                expense_id=id,
+                values=values,
+                error=error,
+            ),
+            400,
+        )
+
+    updated = update_expense(
+        id,
+        user_id,
+        cleaned["amount"],
+        cleaned["category"],
+        cleaned["date"],
+        cleaned["description"],
+    )
+    if not updated:
+        abort(404)
+    flash("Expense updated.", "success")
+    return redirect(url_for("profile"))
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-
-@app.route("/expenses/<int:id>/edit")
-def edit_expense(id):
-    return "Edit expense — coming in Step 8"
 
 
 @app.route("/expenses/<int:id>/delete")

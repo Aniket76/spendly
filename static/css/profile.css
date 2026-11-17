@@ -309,6 +309,27 @@
 
 .expense-table tbody tr:last-child td { border-bottom: 0; }
 
+.expense-table .col-actions {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.expense-edit-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    color: var(--accent);
+    font-weight: 500;
+    text-decoration: underline;
+}
+
+.expense-edit-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 .category-chip {
     display: inline-block;
     padding: 0.15rem 0.6rem;
@@ -365,5 +386,15 @@
         font-weight: 600;
         color: var(--ink-muted);
         text-align: left;
+    }
+
+    /* Edit link becomes a full-width tap target; its label is redundant. */
+    .expense-table .col-actions::before { display: none; }
+    .expense-table .col-actions { padding-top: 0.5rem; }
+    .expense-table .expense-edit-link {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        text-decoration: none;
     }
 }

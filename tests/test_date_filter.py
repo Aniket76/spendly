@@ -81,6 +81,7 @@ def _html(client, query=""):
 # DB helpers                                                          #
 # ------------------------------------------------------------------ #
 
+
 def test_helpers_unchanged_without_range(db_path):
     uid = _demo_id(db_path)
     summary = db.get_expense_summary(uid, db_path)
@@ -175,6 +176,7 @@ def test_injection_text_is_inert(db_path):
 # Route                                                               #
 # ------------------------------------------------------------------ #
 
+
 def test_all_time_matches_step_4(client):
     html = _html(client, "?range=all")
     assert "₹400.64" in html
@@ -242,7 +244,9 @@ def test_valid_range_no_matches(client):
 def test_new_user_still_sees_no_expenses_yet(app_module):
     db.create_user("Fresh", "fresh@example.com", "password123")
     client = app_module.app.test_client()
-    client.post("/login", data={"email": "fresh@example.com", "password": "password123"})
+    client.post(
+        "/login", data={"email": "fresh@example.com", "password": "password123"}
+    )
     for query in ("", "?date_from=2026-01-01"):
         html = client.get("/profile" + query).get_data(as_text=True)
         assert "No expenses yet" in html
@@ -303,7 +307,9 @@ def test_presets_apply_and_mark_aria_current(client, app_module):
     ):
         start, end = presets[key]
         html = _html(client, f"?date_from={start}&date_to={end}")
-        current = re.findall(r'<a class="filter-preset"[^>]*aria-current="true"[^>]*>([^<]+)<', html)
+        current = re.findall(
+            r'<a class="filter-preset"[^>]*aria-current="true"[^>]*>([^<]+)<', html
+        )
         # Presets can coincide (e.g. on the 7th, This month == Last 7 days).
         assert label in current and "All time" not in current
     assert re.findall(
@@ -322,7 +328,9 @@ def test_filter_scoped_to_user(app_module):
     ).get_data(as_text=True)
     assert "Secret trip" not in demo_html
     client.get("/logout")
-    client.post("/login", data={"email": "other@example.com", "password": "password123"})
+    client.post(
+        "/login", data={"email": "other@example.com", "password": "password123"}
+    )
     other_html = client.get(
         f"/profile?date_from={_month_day(1)}&date_to={_month_day(10)}"
     ).get_data(as_text=True)
@@ -353,10 +361,10 @@ def test_template_and_css_rules():
 
 
 def test_stubs_unchanged(client):
-    # /expenses/add is implemented in Step 6; edit and delete are still stubs.
-    assert client.get("/expenses/1/edit").get_data(as_text=True) == (
-        "Edit expense — coming in Step 8"
-    )
+    # /expenses/add and edit are implemented; delete is still a stub.
+    response = client.get("/expenses/1/edit")
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/login")
     assert client.get("/expenses/1/delete").get_data(as_text=True) == (
         "Delete expense — coming in Step 9"
     )
