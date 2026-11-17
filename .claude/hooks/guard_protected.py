@@ -4,7 +4,7 @@ import json
 import re
 import sys
 
-PROTECTED = ["spendly.db", ".env", "migrations/"]
+PROTECTED = ["expense_tracker.db", ".env", "migrations/"]
 DANGEROUS = re.compile(r"(?:^|[\s;&|])(rm|unlink|truncate)(?=\s)")
 
 
