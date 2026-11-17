@@ -1,11 +1,13 @@
 import os
 import sqlite3
 from datetime import date, timedelta
+from decimal import Decimal, InvalidOperation
 
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
 from database.db import (
+    create_expense,
     create_user,
     get_category_totals,
     get_db,
@@ -230,13 +232,125 @@ def profile():
     )
 
 
+EXPENSE_CATEGORIES = (
+    "Food",
+    "Transport",
+    "Bills",
+    "Health",
+    "Entertainment",
+    "Shopping",
+    "Other",
+)
+MAX_AMOUNT = Decimal("10000000")
+MAX_DESCRIPTION_LENGTH = 200
+
+AMOUNT_ERROR = "Enter an amount greater than 0 with up to 2 decimal places."
+AMOUNT_TOO_LARGE_ERROR = "Amount cannot be more than ₹1,00,00,000."
+CATEGORY_ERROR = "Choose a category from the list."
+DATE_ERROR = "Enter a valid date."
+FUTURE_DATE_ERROR = "The date cannot be in the future."
+DESCRIPTION_ERROR = (
+    f"Description must be {MAX_DESCRIPTION_LENGTH} characters or fewer."
+)
+
+
+def _validate_expense(raw_amount, category, raw_date, raw_description):
+    """Validate add-expense form input; return (cleaned, error).
+
+    On success `cleaned` is a dict with amount (float, 2 dp), category, date
+    (ISO text) and description (str or None) and `error` is None. On failure
+    `cleaned` is None and `error` is the first failing field's message.
+    """
+    raw_amount = (raw_amount or "").strip()
+    try:
+        amount = Decimal(raw_amount)
+    except InvalidOperation:
+        return None, AMOUNT_ERROR
+    if not amount.is_finite() or amount <= 0:
+        return None, AMOUNT_ERROR
+    if amount > MAX_AMOUNT:
+        return None, AMOUNT_TOO_LARGE_ERROR
+    if amount != amount.quantize(Decimal("0.01")):
+        return None, AMOUNT_ERROR
+
+    if category not in EXPENSE_CATEGORIES:
+        return None, CATEGORY_ERROR
+
+    raw_date = (raw_date or "").strip()
+    try:
+        expense_date = _parse_date(raw_date)
+    except ValueError:
+        return None, DATE_ERROR
+    if expense_date > date.today():
+        return None, FUTURE_DATE_ERROR
+
+    description = (raw_description or "").strip()
+    if len(description) > MAX_DESCRIPTION_LENGTH:
+        return None, DESCRIPTION_ERROR
+
+    return {
+        "amount": round(float(amount), 2),
+        "category": category,
+        "date": expense_date.isoformat(),
+        "description": description or None,
+    }, None
+
+
+@app.route("/expenses/add", methods=["GET", "POST"])
+def add_expense():
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+    if get_user_by_id(user_id) is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    today = date.today().isoformat()
+    if request.method == "GET":
+        return render_template(
+            "add_expense.html",
+            categories=EXPENSE_CATEGORIES,
+            today=today,
+            values={"date": today},
+        )
+
+    # user_id comes only from the session; any user_id in the form is ignored.
+    values = {
+        "amount": request.form.get("amount", ""),
+        "category": request.form.get("category", ""),
+        "date": request.form.get("date", ""),
+        "description": request.form.get("description", ""),
+    }
+    cleaned, error = _validate_expense(
+        values["amount"], values["category"], values["date"], values["description"]
+    )
+    if error is not None:
+        return (
+            render_template(
+                "add_expense.html",
+                categories=EXPENSE_CATEGORIES,
+                today=today,
+                values=values,
+                error=error,
+            ),
+            400,
+        )
+
+    create_expense(
+        user_id,
+        cleaned["amount"],
+        cleaned["category"],
+        cleaned["date"],
+        cleaned["description"],
+    )
+    flash("Expense added.", "success")
+    # No filter in the URL, so the profile opens on its default "Last 7 days".
+    return redirect(url_for("profile"))
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/expenses/add")
-def add_expense():
-    return "Add expense — coming in Step 7"
 
 
 @app.route("/expenses/<int:id>/edit")

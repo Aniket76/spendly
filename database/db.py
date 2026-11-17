@@ -189,6 +189,36 @@ def create_user(name, email, password, db_path=None):
         conn.close()
 
 
+def create_expense(
+    user_id, amount, category, expense_date, description=None, db_path=None
+):
+    """Insert an expense for a user and return the new expense id.
+
+    Inputs are expected to be validated already (see the route). The amount is
+    stored rounded to 2 decimals and a blank description is stored as NULL.
+    """
+    conn = get_db(db_path)
+    try:
+        cursor = conn.execute(
+            "INSERT INTO expenses (user_id, amount, category, date, description) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (
+                user_id,
+                round(float(amount), 2),
+                category,
+                expense_date,
+                (description or "").strip() or None,
+            ),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
 def seed_db(db_path=None):
     """Insert a demo user and sample expenses once; no-op if users exist."""
     conn = get_db(db_path)

@@ -98,7 +98,7 @@ pytest -s
 | `GET /login` | Implemented — renders `login.html` |
 | `GET /logout` | Implemented — clears the session, redirects to `/` |
 | `GET /profile` | Implemented — renders `profile.html` (logged-in only); optional `?date_from=` / `?date_to=` (YYYY-MM-DD) date filter |
-| `GET /expenses/add` | Stub — Step 7 |
+| `GET/POST /expenses/add` | Implemented — renders `add_expense.html` (logged-in only); validates and inserts an expense, then redirects to `/profile` (default Last 7 days). Reached from the floating "+" button on the profile page |
 | `GET /expenses/<id>/edit` | Stub — Step 8 |
 | `GET /expenses/<id>/delete` | Stub — Step 9 |
 
